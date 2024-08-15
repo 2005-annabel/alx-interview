@@ -1,30 +1,18 @@
 #!/usr/bin/python3
-"""
-This module contains a function to solve the lockboxes algorithm problem
-"""
+""" Lockboxes """
+
 
 def canUnlockAll(boxes):
+    """ Function caUnlockAll
     """
-    Determines if all the boxes can be opened
-
-    Args:
-        boxes (list): list of boxes
-
-    Return:
-        (bool) True if all boxes can be opened, false otherwise
-    """
-    if not boxes:
-        return False
-
-    unlocked = set()
-    unlocked.add(0)
-    queue = [0]
-
-    while queue:
-        current = queue.pop(0)
-        for key in boxes[current]:
-            if key not in unlocked and key < len(boxes):
-                unlocked.add(key)
-                queue.append(key)
-
-    return len(unlocked) == len(boxes)
+    n = len(boxes)
+    seen_boxes = set([0])
+    unseen_boxes = set(boxes[0]).difference(set([0]))
+    while len(unseen_boxes) > 0:
+        boxIdx = unseen_boxes.pop()
+        if not boxIdx or boxIdx >= n or boxIdx < 0:
+            continue
+        if boxIdx not in seen_boxes:
+            unseen_boxes = unseen_boxes.union(boxes[boxIdx])
+            seen_boxes.add(boxIdx)
+    return n == len(seen_boxes)

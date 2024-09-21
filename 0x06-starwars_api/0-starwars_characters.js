@@ -1,44 +1,53 @@
 #!/usr/bin/node
+
 const request = require('request');
-const process = require('process');
 
-const URL = 'https://swapi-api.alx-tools.com/api/films/';
-const filmId = process.argv[2];
+const movieId = process.argv[2];
+const filmEndPoint = 'https://swapi-api.hbtn.io/api/films/' + movieId;
+let people = [];
+const names = [];
 
-request(URL + filmId + '/', (err, res, body) => {
-  if (err) {
-    console.log(err);
-    return;
-  } else if (res.statusCode !== 200) {
-    console.log('Error');
-    return;
-  }
+const requestCharacters = async () => {
+  await new Promise(resolve => request(filmEndPoint, (err, res, body) => {
+    if (err || res.statusCode !== 200) {
+      console.error('Error: ', err, '| StatusCode: ', res.statusCode);
+    } else {
+      const jsonBody = JSON.parse(body);
+      people = jsonBody.characters;
+      resolve();
+    }
+  }));
+};
 
-  body = JSON.parse(body);
-
-  const printed = [];
-  const charactersLength = body.characters.length;
-
-  for (let i = 0; i < charactersLength; i++) {
-    request(body.characters[i], (err, res, body) => {
-      if (err) {
-        console.log(err);
-        return;
-      } else if (res.statusCode !== 200) {
-        console.log('Error');
-        return;
-      }
-
-      body = JSON.parse(body);
-      printed.push({ index: i, name: body.name });
-
-      if (printed.length === charactersLength) {
-        printed.sort((a, b) => a.index - b.index);
-
-        for (let j = 0; j < printed.length; j++) {
-          console.log(printed[j].name);
+const requestNames = async () => {
+  if (people.length > 0) {
+    for (const p of people) {
+      await new Promise(resolve => request(p, (err, res, body) => {
+        if (err || res.statusCode !== 200) {
+          console.error('Error: ', err, '| StatusCode: ', res.statusCode);
+        } else {
+          const jsonBody = JSON.parse(body);
+          names.push(jsonBody.name);
+          resolve();
         }
-      }
-    });
+      }));
+    }
+  } else {
+    console.error('Error: Got no Characters for some reason');
   }
-});
+};
+
+const getCharNames = async () => {
+  await requestCharacters();
+  await requestNames();
+
+  for (const n of names) {
+    if (n === names[names.length - 1]) {
+      process.stdout.write(n);
+    } else {
+      process.stdout.write(n + '\n');
+    }
+  }
+};
+
+getCharNames();
